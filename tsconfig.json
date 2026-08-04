@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "types": ["node"]
+  },
+  "include": ["lib/**/*.ts", "cli.ts", "render-smoke.ts", "core-smoke.ts", "scripts/**/*.mjs"],
+  "exclude": ["node_modules", "dist"]
+}

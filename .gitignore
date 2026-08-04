@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+*.tsbuildinfo
+storybook-static/
+renderer/dist/
+renderer/src/content/*.mdx
+renderer/.astro/

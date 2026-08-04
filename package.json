@@ -1,0 +1,129 @@
+{
+  "name": "esf-dsl",
+  "version": "0.1.0",
+  "description": "The ESF DSL — a typed vocabulary for engineering-strategy reports, and the pipeline that compiles one source into seven channels.",
+  "keywords": [
+    "engineering-strategy",
+    "esf",
+    "report",
+    "mdx",
+    "markdown",
+    "json-ld",
+    "provenance",
+    "evidence",
+    "static-site",
+    "documentation",
+    "dsl"
+  ],
+  "license": "MIT AND OFL-1.1",
+  "author": "Vitaly Panchuk <vit.panchuk@gmail.com> (https://vit-panchuk.com)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vit-panchuk/esf-dsl.git"
+  },
+  "homepage": "https://github.com/vit-panchuk/esf-dsl#readme",
+  "bugs": {
+    "url": "https://github.com/vit-panchuk/esf-dsl/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "bun": ">=1.3.0"
+  },
+  "bin": {
+    "esf": "./dist/cli.js"
+  },
+  "types": "./dist/lib/index.d.ts",
+  "exports": {
+    "./core": {
+      "types": "./dist/lib/index.d.ts",
+      "default": "./dist/lib/index.js"
+    },
+    "./core/*": {
+      "types": "./dist/lib/*.d.ts",
+      "default": "./dist/lib/*.js"
+    },
+    "./rehype-entry-ids": "./lib/rehype-entry-ids.mjs",
+    "./styles/esf.css": "./styles/esf.css",
+    "./styles/theme-vit-panchuk.css": "./styles/theme-vit-panchuk.css",
+    "./standalone": {
+      "types": "./dist/lib/standalone.d.ts",
+      "default": "./dist/lib/standalone.js"
+    },
+    "./engagement": {
+      "types": "./dist/lib/engagement.d.ts",
+      "default": "./dist/lib/engagement.js"
+    },
+    "./dictionary": {
+      "types": "./dist/lib/dictionary.d.ts",
+      "default": "./dist/lib/dictionary.js"
+    },
+    "./document": {
+      "types": "./dist/lib/document.d.ts",
+      "default": "./dist/lib/document.js"
+    },
+    "./package.json": "./package.json",
+    "./pdf": {
+      "types": "./dist/lib/pdf.d.ts",
+      "default": "./dist/lib/pdf.js"
+    },
+    "./core/html": {
+      "types": "./dist/lib/html.d.ts",
+      "default": "./dist/lib/html.js"
+    },
+    "./render": {
+      "types": "./dist/lib/render.d.ts",
+      "default": "./dist/lib/render.js"
+    },
+    "./html": {
+      "types": "./dist/lib/html.d.ts",
+      "default": "./dist/lib/html.js"
+    },
+    "./document-html": {
+      "types": "./dist/lib/render-document.d.ts",
+      "default": "./dist/lib/render-document.js"
+    }
+  },
+  "files": [
+    "dist",
+    "styles",
+    "fixtures",
+    "lib/rehype-entry-ids.mjs",
+    "README.md",
+    "LICENSE",
+    "!**/__tests__"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:core": "bun run core-smoke.ts",
+    "check": "tsc --noEmit -p tsconfig.build.json",
+    "esf": "bun run cli.ts",
+    "build": "bun run build:lib && bun build cli.ts --target=node --outfile=dist/cli.js && chmod +x dist/cli.js",
+    "test:render": "bun run render-smoke.ts",
+    "prepack": "bun run build",
+    "build:lib": "tsc -p tsconfig.build.json && node scripts/esm-extensions.mjs",
+    "storybook": "storybook dev -p 6007",
+    "build:storybook": "storybook build"
+  },
+  "dependencies": {
+    "hast-util-to-html": "^9.0.5",
+    "highlight.js": "^11.11.1",
+    "mdast-util-gfm": "^3.1.0",
+    "mdast-util-to-hast": "^13.2.1",
+    "mdast-util-to-markdown": "^2.1.2",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx": "^3.1.0",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@storybook/html-vite": "^10.5.5",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^26.1.2",
+    "storybook": "^10.5.5",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.10"
+  }
+}

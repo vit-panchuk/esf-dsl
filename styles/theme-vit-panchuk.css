@@ -1,0 +1,239 @@
+/* ===========================================================
+   THEME — the token contract, and the whole of what a third
+   party swaps out.
+
+   This file is the API. Everything in esf.css consumes these
+   custom properties and never hard-codes a colour, a face or a
+   step; a theme that defines all of them renders the language
+   correctly without touching a single component. The fonts live
+   here too, because a typeface is a theme decision.
+
+   vit-panchuk.com is the default theme. Its core rule — SIGNAL
+   ORANGE MARKS UNCERTAINTY, never decoration — is doctrine, not
+   something the stylesheet can enforce: a theme that repurposes
+   --signal as an accent will render, and will be lying.
+   =========================================================== */
+@font-face{font-family:"Fixel Display";font-weight:900;font-style:normal;font-display:swap;src:url(fonts/FixelDisplay-Black.woff2) format("woff2")}
+@font-face{font-family:"Fixel Display";font-weight:600;font-style:italic;font-display:swap;src:url(fonts/FixelDisplay-SemiBoldItalic.woff2) format("woff2")}
+@font-face{font-family:"Fixel Text";font-weight:600;font-style:italic;font-display:swap;src:url(fonts/FixelText-SemiBoldItalic.woff2) format("woff2")}
+/* Display face: Fixel, by MacPaw with the Ukrainian foundry AlfaBravo. Free
+   for any use, wide low-contrast geometric grotesque — Solomon Sans's own
+   register, unlike Jost's narrow Futura forms — with true italics and a full
+   Ukrainian layout (G with upturn, Ye, I, Yi), so the UA edition needs no
+   substitution. Display Black 900 shouts; Display SemiBold Italic is the one
+   oblique. Two files, self-hosted, no licence to buy.                     */
+/* ===========================================================
+   vit-panchuk.com — design tokens
+   Inherited from Brukivka Racing: Ink, Signal, and the geometric
+   display voice — set in Fixel, the free Ukrainian stand-in for Solomon Sans.
+   Core rule: SIGNAL ORANGE MARKS UNCERTAINTY. Never decoration.
+   =========================================================== */
+
+:root {
+  /* --- ground + ink ------------------------------------- */
+  --paper:      #FBFAF8;  /* barely-warm off-white, not cream */
+  --surface:    #F4F2ED;  /* recessed blocks, table stripes   */
+  --ink:        #1D1D1B;  /* Brukivka near-black              */
+  --ink-muted:  #6F6D66;  /* metadata, captions               */
+  --rule:       #E2DFD8;  /* hairlines                        */
+  --rule-firm:  #1D1D1B;  /* the Brukivka section rule        */
+
+  /* --- the one accent ------------------------------------ */
+  --signal:     #FF4800;  /* Brukivka orange = THE UNKNOWN    */
+  --signal-ink: #C23000;  /* orange readable as text on paper */
+  --signal-wash:#FFEDE6;  /* orange at 8%, for chip grounds   */
+  --code-wash:  oklch(0.94 0.005 70);  /* inline literal ground — 6% off paper */
+  --code-lit:   oklch(0.42 0.008 70);  /* inline literal text, 7.7:1 on the wash */
+  --plate-screen: #FBFAF8; /* halftone dot on an orange plate */
+  --plate-screen-ink: #FBFAF8; /* halftone dot on an ink plate    */
+
+
+  /* --- code, tinted variant ------------------------------
+     Opt-in colour for long listings, where all-grey is tiring.
+     Three cool hues only, chosen to sit AWAY from orange on the
+     wheel so the accent keeps its meaning. Set in oklch at one
+     lightness so no role shouts louder than another.          */
+  --code-key: oklch(0.45 0.15 265); /* @kind color */
+  --code-str: oklch(0.44 0.11 165); /* @kind color */
+  --code-num: oklch(0.47 0.13 320); /* @kind color */
+
+
+  /* --- verdict pair --------------------------------------
+     For comparison tables only: has it / does not. Two hues,
+     no amber — a middle verdict is a sentence, not a colour.
+     Kept low in chroma so the accent still wins the page.   */
+  --verdict-yes: oklch(0.47 0.10 155); /* @kind color */
+  --verdict-no:  oklch(0.50 0.13 22);  /* @kind color */
+
+  /* --- provenance scale (ESF claim tags) ------------------
+     Deliberately monochrome except [assumed]. Certainty is
+     quiet; the guess is the only thing that gets colour.     */
+  --tag-observed: #1D1D1B;
+  --tag-web:      #4A4843;
+  --tag-user:     #6F6D66;
+  --tag-inferred: #9B9891;
+  --tag-assumed:  var(--signal);
+
+  /* --- type ---------------------------------------------- */
+  --display: "Fixel Display", "Helvetica Neue", Arial, sans-serif; /* @kind font */
+  --body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif; /* @kind font */
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace; /* @kind font */
+
+  --step--1: 0.8125rem;
+  --step-0:  1.0625rem;
+  --step-1:  1.25rem;
+  --step-2:  1.5rem;
+  /* Display steps are fluid: a 4rem heading is 64px on a phone and eats the
+     screen. Lower bound is the phone size, upper bound the old fixed value. */
+  --step-3:  clamp(1.6rem, 1.15rem + 2.1vw, 2rem); /* @kind other */
+  --step-4:  clamp(2rem, 1.35rem + 3.1vw, 2.75rem); /* @kind other */
+  --step-5:  clamp(2.4rem, 1.4rem + 4.8vw, 4rem); /* @kind other */
+
+  /* --- space --------------------------------------------- */
+  --s1: 0.25rem;  --s2: 0.5rem;   --s3: 0.75rem;
+  --s4: 1rem;     --s5: 1.5rem;   --s6: 2rem;
+  --s7: 3rem;     --s8: 4.5rem;   --s9: 7rem;
+
+  --measure: 34rem;
+  --shell: 60rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:      #131312;
+    --surface:    #1C1C1A;
+    --ink:        #EDEAE4;
+    --ink-muted:  #918E86;
+    --rule:       #33322E;
+    --rule-firm:  #EDEAE4;
+    --signal:     #FF5A1F;
+    --signal-ink: #FF7A47;
+    --signal-wash:#2A1408; --plate-screen:#EDEAE4; --plate-screen-ink:#131312; --code-wash:oklch(0.26 0.006 70); --code-lit:oklch(0.83 0.010 70);
+    --tag-observed: #EDEAE4;
+    --tag-web:      #C6C2BA;
+    --tag-user:     #918E86;
+    --tag-inferred: #6B6963;
+    --tag-assumed:  var(--signal);
+    --code-key: oklch(0.80 0.11 265); /* @kind color */
+    --code-str: oklch(0.80 0.10 165); /* @kind color */
+    --code-num: oklch(0.80 0.10 320); /* @kind color */
+  }
+}
+
+:root[data-theme="dark"] {
+  --verdict-yes: oklch(0.79 0.10 155); /* @kind color */
+  --verdict-no:  oklch(0.73 0.13 22);  /* @kind color */
+  --code-key: oklch(0.80 0.11 265); /* @kind color */
+  --code-str: oklch(0.80 0.10 165); /* @kind color */
+  --code-num: oklch(0.80 0.10 320); /* @kind color */
+  --paper:      #131312;
+  --surface:    #1C1C1A;
+  --ink:        #EDEAE4;
+  --ink-muted:  #918E86;
+  --rule:       #33322E;
+  --rule-firm:  #EDEAE4;
+  --signal:     #FF5A1F;
+  --signal-ink: #FF7A47;
+  --signal-wash:#2A1408; --plate-screen:#EDEAE4; --plate-screen-ink:#131312; --code-wash:oklch(0.26 0.006 70); --code-lit:oklch(0.83 0.010 70);
+  --tag-observed: #EDEAE4;
+  --tag-web:      #C6C2BA;
+  --tag-user:     #918E86;
+  --tag-inferred: #6B6963;
+  --tag-assumed:  var(--signal);
+}
+
+:root[data-theme="light"] {
+  --verdict-yes: oklch(0.47 0.10 155); /* @kind color */
+  --verdict-no:  oklch(0.50 0.13 22);  /* @kind color */
+  --code-key: oklch(0.45 0.15 265); /* @kind color */
+  --code-str: oklch(0.44 0.11 165); /* @kind color */
+  --code-num: oklch(0.47 0.13 320); /* @kind color */
+  --paper:      #FBFAF8;
+  --surface:    #F4F2ED;
+  --ink:        #1D1D1B;
+  --ink-muted:  #6F6D66;
+  --rule:       #E2DFD8;
+  --rule-firm:  #1D1D1B;
+  --signal:     #FF4800;
+  --signal-ink: #C23000;
+  --signal-wash:#FFEDE6; --plate-screen:#FBFAF8; --plate-screen-ink:#FBFAF8; --code-wash:oklch(0.94 0.005 70); --code-lit:oklch(0.42 0.008 70);
+  --tag-observed: #1D1D1B;
+  --tag-web:      #4A4843;
+  --tag-user:     #6F6D66;
+  --tag-inferred: #9B9891;
+  --tag-assumed:  var(--signal);
+}
+
+
+/* ===========================================================
+   PAPER · the inverted variant. data-theme="paper" is the light
+   theme taken all the way: true white stock, black ink, and the
+   accent dropped to its readable ink value because a laser
+   printer renders #FF4800 as a muddy tint. Applied automatically
+   when printing, and available on screen for proofing.
+   =========================================================== */
+:root[data-theme="paper"] {
+  --paper:      #FFFFFF;  /* @kind color */
+  --surface:    #F2F1EC;  /* @kind color */
+  --ink:        #000000;  /* @kind color */
+  --ink-muted:  #4A4843;  /* @kind color */
+  --rule:       #C9C6BE;  /* @kind color */
+  --rule-firm:  #000000;  /* @kind color */
+  --signal:     #C23000;  /* @kind color */
+  --signal-ink: #A82A00;  /* @kind color */
+  --signal-wash:#FFF0EA;  /* @kind color */
+  --plate-screen: #FFFFFF; /* @kind color */
+  --plate-screen-ink: #FFFFFF; /* @kind color */
+  --tag-observed: #000000; /* @kind color */
+  --tag-web:      #333230; /* @kind color */
+  --tag-user:     #4A4843; /* @kind color */
+  --tag-inferred: #6F6D66; /* @kind color */
+  --tag-assumed:  var(--signal);
+  --code-key: oklch(0.42 0.15 265); /* @kind color */
+  --code-str: oklch(0.40 0.11 165); /* @kind color */
+  --code-num: oklch(0.43 0.13 320); /* @kind color */
+  --code-wash: oklch(0.95 0 0); --code-lit: oklch(0.30 0 0); /* @kind color */
+  --verdict-yes: oklch(0.42 0.10 155); /* @kind color */
+  --verdict-no:  oklch(0.45 0.13 22);  /* @kind color */
+}
+
+
+/* ===========================================================
+   Motion
+   Four durations, three curves, one rule: motion explains a
+   change of state, it never announces itself. Anything longer
+   than --dur-3 is either the mark's reveal or a mistake.
+   =========================================================== */
+:root {
+  /* state feedback — hover, focus, press */
+  --dur-1: 90ms; /* @kind other */
+  /* one element enters, leaves, or resizes */
+  --dur-2: 180ms; /* @kind other */
+  /* a region changes — panel, theme, disclosure */
+  --dur-3: 320ms; /* @kind other */
+  /* the mark's card turn. Nothing else, ever. */
+  --dur-4: 700ms; /* @kind other */
+  /* Out for things arriving (fast start, soft landing), in-out for
+     things travelling between two states, snap for the card turn. */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);    /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);    /* @kind other */
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);          /* @kind other */
+}
+/* Reduced motion removes travel and rotation but keeps opacity: a
+   thing may still appear, it just may not fly. Durations collapse
+   rather than zero out, so transition-end handlers still fire. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms; /* @kind other */
+    --dur-2: 1ms; /* @kind other */
+    --dur-3: 1ms; /* @kind other */
+    --dur-4: 1ms; /* @kind other */
+  }
+  *, *::before, *::after {
+    animation-duration: 1ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important; scroll-behavior: auto !important;
+  }
+}
+

@@ -1,0 +1,118 @@
+/* A theme that ships its own face, to prove a custom theme can.
+   The url is relative to THIS file, and reaches up out of the fixture
+   rather than keeping a second copy of a licensed face in the repo —
+   which also proves `../` paths resolve, since a real theme will not
+   always sit above its fonts. */
+@font-face{font-family:"Custom Face";font-weight:600;font-style:italic;font-display:swap;
+  src:url(../../styles/fonts/FixelText-SemiBoldItalic.woff2) format("woff2")}
+
+/* ===========================================================
+   A worked example of a second theme, and the smoke test for
+   `--theme`.
+
+   It defines the whole token contract and nothing else: no
+   component is touched, no class name is known to it. If a
+   report renders correctly under this file, the contract is
+   real rather than described.
+
+   Deliberately unlike the default — a serif face, a blue
+   signal, tighter measure — so a render under this theme is
+   obviously not the default one at a glance.
+
+   Note the one rule a stylesheet cannot enforce: --signal
+   still means UNCERTAINTY here. It is blue rather than
+   orange, and it still marks only the guess.
+   =========================================================== */
+
+:root {
+  /* --- ground + ink ------------------------------------- */
+  --paper:      #FFFFFF;
+  --surface:    #F1F3F6;
+  --ink:        #14181F;
+  --ink-muted:  #5B6472;
+  --rule:       #D6DBE3;
+  --rule-firm:  #14181F;
+
+  /* --- the one accent: the unknown, in blue -------------- */
+  --signal:     #1F5EFF;
+  --signal-ink: #1546C4;
+  --signal-wash:#E8EEFF;
+  --code-wash:  #EEF1F6;
+  --code-lit:   #2A3340;
+  --plate-screen: #FFFFFF;
+  --plate-screen-ink: #FFFFFF;
+
+  --code-key: oklch(0.45 0.15 265);
+  --code-str: oklch(0.44 0.11 165);
+  --code-num: oklch(0.47 0.13 320);
+
+  --verdict-yes: oklch(0.47 0.10 155);
+  --verdict-no:  oklch(0.50 0.13 22);
+
+  /* --- provenance scale --------------------------------- */
+  --tag-observed: #14181F;
+  --tag-web:      #3D4757;
+  --tag-user:     #5B6472;
+  --tag-inferred: #98A2B3;
+  --tag-assumed:  var(--signal);
+
+  /* --- type: a serif, where the default is a grotesque --- */
+  --display: "Custom Face", Georgia, serif;
+  --body: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --step--1: 0.8125rem;
+  --step-0:  1.0625rem;
+  --step-1:  1.25rem;
+  --step-2:  1.5rem;
+  --step-3:  clamp(1.6rem, 1.15rem + 2.1vw, 2rem);
+  --step-4:  clamp(2rem, 1.35rem + 3.1vw, 2.75rem);
+  --step-5:  clamp(2.4rem, 1.4rem + 4.8vw, 4rem);
+
+  /* --- space -------------------------------------------- */
+  --s1: 0.25rem;  --s2: 0.5rem;   --s3: 0.75rem;
+  --s4: 1rem;     --s5: 1.5rem;   --s6: 2rem;
+  --s7: 3rem;     --s8: 4.5rem;   --s9: 7rem;
+
+  --measure: 32rem;
+  --shell: 58rem;
+
+  /* --- motion ------------------------------------------- */
+  --dur-1: 90ms;  --dur-2: 180ms; --dur-3: 320ms; --dur-4: 700ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:      #0F1319;
+    --surface:    #171C24;
+    --ink:        #E7EBF1;
+    --ink-muted:  #97A1B0;
+    --rule:       #2A3240;
+    --rule-firm:  #E7EBF1;
+    --signal:     #5B8CFF;
+    --signal-ink: #85A9FF;
+    --signal-wash:#101B33;
+    --code-wash:  #171C24;
+    --code-lit:   #C7D0DC;
+    --plate-screen: #E7EBF1;
+    --plate-screen-ink: #0F1319;
+    --tag-observed: #E7EBF1;
+    --tag-web:      #C2CAD6;
+    --tag-user:     #97A1B0;
+    --tag-inferred: #6C7686;
+    --tag-assumed:  var(--signal);
+    --verdict-yes: oklch(0.79 0.10 155);
+    --verdict-no:  oklch(0.73 0.13 22);
+  }
+}
+
+/* The print variant. Backgrounds are opt-in in every print dialog, so the
+   accent drops to a value that reads as ink when the fill is dropped. */
+:root[data-theme="paper"] {
+  --paper: #FFFFFF;  --surface: #F1F3F6;  --ink: #000000;
+  --ink-muted: #444C57; --rule: #C7CDD6; --rule-firm: #000000;
+  --signal: #1546C4; --signal-ink: #123AA5; --signal-wash: #EDF2FF;
+}

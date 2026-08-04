@@ -1,0 +1,260 @@
+---
+title: Foobar
+subtitle: Every construct the language has, in one document, so that none of them ships unrendered.
+subject: The Foobar platform
+summary: >-
+  A smoke-test report. It says nothing true about anything, and exercises all
+  43 ambient constructs so each is proved to render in every channel.
+kind: report
+mode: existing-system audit
+rev: 3
+status: live
+published: 2026-08-01
+updated: 2026-08-04
+stakeholders: partial
+framework: ESF v0.7
+author: Nobody
+emits: [web, pdf, md, jsonld, deck, thread]
+tags: [smoke-test, fixture]
+---
+
+## Evidence Base
+
+The notation legend, announced once so the counter skips every chip in it.
+
+<Table legend>
+| Tag | Means |
+|---|---|
+| <Chip kind="observed" /> | seen directly in the artefact |
+| <Chip kind="web" /> | a public source, cited |
+| <Chip kind="user" /> | a stakeholder said it |
+| <Chip kind="inferred" /> | reasoned from the above |
+| <Chip kind="assumed" /> | a guess, and marked as one |
+</Table>
+
+{/* Normally the view passes counted rows; authored here so the fixture
+    proves the component itself renders. */}
+<Evidence rows={[
+  { label: "observed", pct: 43, n: 3 },
+  { label: "web", pct: 0, n: 0 },
+  { label: "stakeholder", pct: 14, n: 1 },
+  { label: "inferred", pct: 29, n: 2 },
+  { label: "assumed", pct: 14, n: 1, assumed: true },
+]} />
+
+## The machine
+
+Foobar has shipped every Tuesday for six years <Chip kind="observed" />.
+Its build takes forty minutes <Chip kind="observed" />, which the team calls
+fine <Chip kind="user" /> and the logs call optimistic <Chip kind="inferred" />.
+Nobody has measured the queue <Chip kind="assumed" />.
+
+<Finding deck="Ships weekly. Nobody knows why it works." thread="Foobar ships every Tuesday and nobody can say why it works." tag="observed">
+Ships weekly. Nobody knows why it works.
+</Finding>
+
+<Takeaway>
+A cadence nobody understands is a cadence nobody can defend when it breaks.
+</Takeaway>
+
+<Callout kind="unknown" label="What would change this">
+One week of queue timings. If the median wait is under a minute, the forty
+minutes is the build and not the machine around it.
+</Callout>
+
+<PullQuote>
+If the build is red on a Tuesday, ship anyway.
+</PullQuote>
+
+### How it is put together
+
+{/* The body is a template literal: raw `export` in MDX is parsed as a real
+    ESM export, not as the code the listing is showing. */}
+<Listing lang="ts" file="build.ts" caption="The whole scheduler.">
+{`export const shipDay = 2; // Tuesday, nobody remembers who chose it
+const queue: Job[] = [];`}
+</Listing>
+
+<Cols title="Where the forty minutes goes" cols={[
+  { label: "compile", n: 22, v: 100 },
+  { label: "test", n: 11, v: 50 },
+  { label: "queue", n: "~7", v: 32, assumed: true },
+]} />
+
+Footnotes carry the aside a sentence cannot.<Fn n={1} href="#src-1" />
+
+<Sources>
+  <li id="src-1">Foobar build logs, January–June 2026.</li>
+  <li>Runbook, last edited 2019.</li>
+</Sources>
+
+<State kind="unknown" label="Not established" title="Nobody who runs the deploy was reached">
+The zero in the stakeholder row is a limitation, not a rounding artefact.
+</State>
+
+## What happened
+
+<Timeline>
+  <Event when="2019">The Tuesday rule is written, by someone since departed.</Event>
+  <Event when="gap" gap>No record of anything, 2020 – 2022</Event>
+  <Event when="2023" assumed>The build quietly passes twenty minutes</Event>
+  <Event when="2026-06" open>A release is deliberately skipped, and nothing breaks</Event>
+</Timeline>
+
+<Dialog>
+  <Turn who="maintainer" when="2026-06-30">
+    Can we move ship day? Tuesday is arbitrary.
+  </Turn>
+  <DialogNote>Three weeks pass.</DialogNote>
+  <Turn who="lead" silence />
+</Dialog>
+
+## The numbers
+
+<Figures items={[
+  { v: "40 min", cap: "median build" },
+  { v: "6 yr", cap: "unchanged cadence" },
+  { v: "0", cap: "queue measurements" },
+]} />
+
+<Table deck="Build time by stage, six years" caption="Minutes per stage.">
+| Stage | 2020 | 2026 |
+|---|---|---|
+| compile | 8 | 22 |
+| test | 4 | 11 |
+| queue | 0 | <Verdict value="no">~7</Verdict> |
+</Table>
+
+<Bars title="Releases per quarter" rows={[
+  { label: "2025 Q3", v: 100, value: "13" },
+  { label: "2025 Q4", v: 92, value: "12" },
+  { label: "2026 Q1", v: 46, to: 60, value: "6–8", assumed: true },
+]} caption="The last bar is a projection." />
+
+<Horizon
+  heads={[
+    { label: "Now", note: "weeks", now: true },
+    { label: "Next", note: "a quarter" },
+    { label: "Later", note: "unscheduled" },
+  ]}
+  lanes={[
+    { label: "Delivery machine", cells: [["Queue timing"], ["Build split"], []] },
+    { label: "Process", cells: [[], ["Ship-day decision"], ["Runbook rewrite"]] },
+  ]}
+/>
+
+<AxisPlot
+  title="Effort against certainty"
+  x="Effort"
+  y="Certainty"
+  quadrants={["measure", "commit", "ignore", "defer"]}
+  hot="tl"
+  points={[
+    { label: "Queue timing", x: 15, y: 80 },
+    { label: "Build split", x: 80, y: 35, assumed: true },
+  ]}
+/>
+
+<LinePlot
+  title="Build minutes, by quarter"
+  series={[{ points: "0,8 25,12 50,17 75,20 100,22" }]}
+  xLabels={["2020", "2022", "2024", "2026"]}
+  keyItems={[{ label: "median build minutes" }]}
+/>
+
+<Donut title="Where the time goes" parts={[
+  { label: "compile", pct: 55 },
+  { label: "test", pct: 27 },
+  { label: "queue", pct: 18, signal: true },
+]} />
+
+Inline trend: the build has climbed steadily <Spark points="0,12 30,9 60,6 100,3" />.
+
+<Share title="Who merges" segments={[
+  { label: "two maintainers", pct: 71 },
+  { label: "everyone else", pct: 29, signal: true },
+]} />
+
+<Figure alt="A placeholder figure" caption="Figures carry a caption and an alt, always." />
+
+<Plate alt="A plate is the only imagery the system has." tone="ink" />
+
+<Diagram
+  title="Who answered whom"
+  spec={{
+    kind: "sequence",
+    actors: ["Auditor", "Maintainers"],
+    messages: [
+      { from: "Auditor", to: "Maintainers", text: "Why Tuesday?" },
+      { from: "Maintainers", to: "Auditor", text: "no reply", dashed: true },
+    ],
+  }}
+  caption="The silence is the finding."
+/>
+
+<Wardley
+  yLabel="Visible to the buyer"
+  nodes={[
+    { label: "Weekly cadence", visibility: 0.86, evolution: 0.34, own: true },
+    { label: "Build", visibility: 0.55, evolution: 0.52, own: true },
+    { label: "Queue", visibility: 0.3, evolution: 0.28, own: true, assumed: true, moveTo: 0.45 },
+    { label: "CI runners", visibility: 0.12, evolution: 0.85, side: "below" },
+  ]}
+  links={[
+    ["Weekly cadence", "Build"],
+    ["Build", "Queue"],
+    ["Queue", "CI runners"],
+  ]}
+/>
+
+## Findings
+
+<Cause id="RC1" title="Nobody owns the schedule" ensures="every timing question becomes an archaeology exercise">
+The Tuesday rule outlived its author and was never re-decided.
+</Cause>
+
+<Risk id="R1" title="The queue is the real bottleneck" flag="amber"
+  happens="a release misses its window"
+  likelihood="likely within two quarters"
+  notice="only from a customer"
+  cost="one release cycle"
+  falsifier="a week of queue timings with a median under 60s">
+Seven of the forty minutes are unaccounted for <Chip kind="inferred" />.
+</Risk>
+
+<Debt id="D1" title="An undocumented cadence" kind="knowledge">
+Paid every time somebody asks why Tuesday.
+</Debt>
+
+<Credit id="C1" title="Six years of unbroken weekly release" status="realized">
+Whatever else is true, the thing ships <Chip kind="observed" />.
+</Credit>
+
+<Mortem id="P1" title="The queue is never measured"
+  warning="a second skipped release, this time unplanned"
+  mitigation="instrument the queue before touching the build"
+  note="the cheapest instrument answers the whole question">
+The team optimizes the build, the queue keeps growing, and the cadence
+breaks anyway.
+</Mortem>
+
+<Decision id="DL1" status="superseded" rev={2} was="Move ship day to Thursday.">
+Hold the day until the queue is measured — see <Ref id="R1" href="#r1" memo="the queue is the real bottleneck" />.
+</Decision>
+
+<Strategies>
+  <Strategy id="S1" state="Ship weekly, on Tuesday" health="Working, cause unknown"
+    stateVerdict="yes" healthVerdict="part" />
+  <Strategy id="S2" state="Measure before optimizing" health="Not in force"
+    stateVerdict="no" healthVerdict="no" />
+</Strategies>
+
+<Bets>
+  <Bet id="B1" verdict="Do" cost="1 day">Instrument the queue for one week<Fragment slot="addresses"><Ref id="R1" href="#r1" memo="the queue is the real bottleneck" />, <Ref id="D1" href="#d1" memo="an undocumented cadence" /></Fragment></Bet>
+  <Bet id="B2" verdict="Kill" cost="3 weeks">Split the build before anything is measured<Fragment slot="addresses"><Ref id="RC1" href="#rc1" memo="nobody owns the schedule" /></Fragment></Bet>
+</Bets>
+
+<EasyWins>
+  <EasyWin id="E1" feeds="observability" day="0.5" status="done">Log queue entry and exit timestamps</EasyWin>
+  <EasyWin id="E2" feeds="documentation" day="0.2" status="open">Write down why Tuesday, or admit nobody knows</EasyWin>
+</EasyWins>

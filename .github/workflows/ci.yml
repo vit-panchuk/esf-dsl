@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # The claim this package makes about itself, checked on a machine that
+  # has never heard of it: the core needs no Astro, no browser and no build
+  # step. It runs first and on plain Node — if it ever needs more, the
+  # split has regressed and everything downstream is beside the point.
+  core:
+    name: Core (no Astro)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - run: bun install --frozen-lockfile
+
+      - name: Core smoke, in a plain Bun process
+        run: bun run test:core
+
+      # The CLI is the addon artefact — the thing a consumer runs without
+      # installing anything. Built here rather than committed, and proved by
+      # running it from a directory with no node_modules in sight.
+      - name: Build the CLI
+        run: bun run build
+
+      - name: The built CLI runs on plain Node, self-contained
+        run: |
+          mkdir -p "$RUNNER_TEMP/isolated"
+          cp dist/cli.js "$RUNNER_TEMP/isolated/"
+          cd "$RUNNER_TEMP/isolated"
+          node cli.js check "$GITHUB_WORKSPACE/fixtures/foobar"
+          node cli.js emit  "$GITHUB_WORKSPACE/fixtures/foobar" --out "$RUNNER_TEMP/out"
+          test -s "$RUNNER_TEMP/out/report.md"
+          test -s "$RUNNER_TEMP/out/report.jsonld"
+
+      # What a consumer would actually receive. `prepack` builds the CLI, so
+      # packing here proves the published tarball contains a working one and
+      # not whatever happened to be in the tree.
+      - name: The packed tarball carries a working CLI and library
+        run: |
+          bun pm pack --destination "$RUNNER_TEMP" >/dev/null
+          cd "$RUNNER_TEMP" && tar xzf esf-dsl-*.tgz
+          node package/dist/cli.js check "$GITHUB_WORKSPACE/fixtures/foobar"
+
+          # And the library half, from plain Node with a real install — the
+          # exports point at compiled JS precisely because Node refuses to
+          # strip types under node_modules, and nothing but this notices if
+          # that regresses.
+          mkdir -p "$RUNNER_TEMP/consumer" && cd "$RUNNER_TEMP/consumer"
+          echo '{"name":"c","type":"module"}' > package.json
+          bun add "$RUNNER_TEMP"/esf-dsl-*.tgz
+          cat > t.mjs <<'JS'
+          import { analyse } from "esf-dsl/core";
+          import { load } from "esf-dsl/engagement";
+          const f = analyse('x <Chip kind="observed" />.');
+          if (f.total !== 1 || typeof load !== "function") process.exit(1);
+          console.log("library imports from plain node");
+          JS
+          node t.mjs
+
+  verify:
+    name: Types, tests, gallery
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - run: bun install --frozen-lockfile
+
+      - name: Types (astro check)
+        run: bun run check
+
+      - name: Tests
+        run: bun run test
+
+      # The gallery renders every construct on the theme and esf.css alone.
+      # A construct that only looks right inside a consuming site is one
+      # this package cannot ship, and this is where that shows up. The
+      # stories are also executed by the test suite — a Storybook build
+      # proves the modules parse, not that anything renders.
+      - name: Build the gallery
+        run: bun run build:storybook
+
+  render:
+    name: Render (the fixture, two themes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - run: bun install --frozen-lockfile
+
+      # Spawns real Astro builds, so it is its own job: the fixture through
+      # the bundled renderer under the default theme and a deliberately
+      # unalike one, asserting the tokens change and the document does not.
+      - name: Render smoke
+        run: bun run test:render
+
+  # PDF is the one channel with a heavy dependency, so it is not gating.
+  # It runs on main to keep the path honest — a channel nobody exercises is
+  # a channel that quietly stops working.
+  pdf:
+    name: PDF (Chromium)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - run: bun install --frozen-lockfile
+
+      - name: Install Chromium
+        run: |
+          bun add -d playwright
+          bunx playwright install --with-deps chromium
+
+      - name: The fixture, as PDFs
+        run: |
+          bun run cli.ts render fixtures/foobar --out "$RUNNER_TEMP/html"
+          bun run cli.ts pdf "$RUNNER_TEMP/html" --out "$RUNNER_TEMP/pdf"
+          test -s "$RUNNER_TEMP/pdf/report.pdf"
+          test -s "$RUNNER_TEMP/pdf/deck.pdf"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foobar-pdf
+          path: ${{ runner.temp }}/pdf
