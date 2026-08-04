@@ -1,6 +1,6 @@
 {
   "name": "esf-dsl",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The ESF DSL — a typed vocabulary for engineering-strategy reports, and the pipeline that compiles one source into seven channels.",
   "keywords": [
     "engineering-strategy",

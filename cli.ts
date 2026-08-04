@@ -28,6 +28,7 @@ import { evidenceRows } from "./lib/doc";
 import { evidence as evidenceBlock } from "./lib/markdown";
 import { DSL, type Lang } from "./lib/strings";
 import { DocumentError } from "./lib/document";
+import { createRequire } from "node:module";
 import {
   DICTIONARY,
   GROUPS,
@@ -37,6 +38,23 @@ import {
   type Group,
 } from "./lib/dictionary";
 
+/* The manifest, not a literal: a version in two places is a version that
+   will disagree with itself. Resolved from this file rather than the
+   working directory, so `esf` run inside an engagement reports its own
+   version and not the engagement's. */
+const VERSION: string = (() => {
+  try {
+    return createRequire(import.meta.url)("../package.json").version;
+  } catch {
+    /* Bundled beside package.json rather than under dist/. */
+    try {
+      return createRequire(import.meta.url)("./package.json").version;
+    } catch {
+      return "unknown";
+    }
+  }
+})();
+
 const USAGE = `esf — engineering-strategy-framework report tooling
 
 usage:
@@ -45,6 +63,7 @@ usage:
   esf render <dir> [--out DIR] [--standalone] [--origin URL] [--theme FILE]
   esf pdf   <html-dir> [--out DIR]   print a render to PDF (needs Playwright)
   esf bar   <dir>                    print the evidence meter
+  esf --version                      print the version, for a preflight check
   esf dict  [Name] [--group G] [--json] [--check]
                                      the language: every construct, its
                                      props, and what it promises each channel
@@ -264,6 +283,11 @@ try {
       }
       break;
     }
+
+    case "--version":
+    case "-v":
+      console.log(VERSION);
+      break;
 
     case "--help":
     case "-h":
