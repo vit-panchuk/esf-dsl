@@ -16,8 +16,55 @@ semantics, and everything else is derived. Add a claim and the evidence
 meter moves on the next run; it cannot drift from the text, which is the
 only reason to trust it.
 
-> **Status: pre-release.** The API moves without notice and the version is
-> `0.1.0`. MIT, except the bundled typefaces — see Licence below.
+> **Status: pre-release.** The API moves without notice. MIT, except the
+> bundled typefaces — see Licence below.
+
+## Install
+
+The package is `esf-dsl`; the command it installs is `esf`.
+
+**Try it without installing anything.** The CLI needs no project around it,
+so this is the honest first look:
+
+```bash
+npx esf-dsl dict            # what the language offers
+pnpm dlx esf-dsl dict
+yarn dlx esf-dsl dict
+bunx esf-dsl dict
+```
+
+**As a command**, for working on engagements:
+
+```bash
+npm install -g esf-dsl
+pnpm add -g esf-dsl
+bun add -g esf-dsl
+```
+
+Yarn 2+ removed `global add`; use `yarn dlx esf-dsl …` for a one-off, or
+install the command with one of the above.
+
+**As a library**, for a consumer that renders reports itself:
+
+```bash
+npm install esf-dsl
+pnpm add esf-dsl
+yarn add esf-dsl
+bun add esf-dsl
+```
+
+Node 20 or newer. The package is ESM only — `import`, not `require`. The
+PDF channel needs Playwright, which is deliberately not a dependency; see
+[PDF](#pdf) below.
+
+```ts
+import { DICTIONARY } from "esf-dsl/dictionary";
+import { load, emit } from "esf-dsl/engagement";
+
+const e = await load("./engagements/acme");
+e.facts.total           // claims, counted from the chips
+await emit("./engagements/acme");
+```
 
 ## The engagement, in and out
 
