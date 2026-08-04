@@ -250,7 +250,8 @@ e.graph?.nodes.length  // the WIP graph, if one is kept beside the report
 | `esf-dsl/core/doc` | the semantic analyzer — parses once, counts the chips |
 | `esf-dsl/core/render-md` · `/jsonld` · `/select` · `/graph` · `/markdown` | the backends |
 | `esf-dsl/core/strings` | the language's own words, per locale |
-| `esf-dsl/html` | `construct(name, props, slots)` — one construct to markup |
+| `esf-dsl/core/render-html` | `construct(name, props, slots)` — one construct to markup, and `toHtmlDoc` for a whole tree |
+| `esf-dsl/html` | the emitters themselves, if you want one directly |
 | `esf-dsl/document-html` | a parsed document to the whole content area |
 | `esf-dsl/render` | an engagement to HTML and slides on disk |
 | `esf-dsl/standalone` | fold a built report and its deck into one file each |
@@ -422,10 +423,6 @@ unused.
 
 ## Known gaps
 
-- **`dist/cli.js` is committed.** A build artefact in git is a real cost —
-  it can drift from source. It is here because the whole point is an entry
-  point that runs with no build step; rebuild it (`bun run build`) in any
-  commit that touches `lib/` or `cli.ts`.
 - `Lang` is `"en" | "uk"` rather than `string`.
 - Prose claims and graph claims are not joined: the page numbers claims
   positionally (`claim-1…`) while the graph names them (`c007`). Until the
