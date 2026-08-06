@@ -249,6 +249,15 @@ Hold the day until the queue is measured — see <Ref id="R1" href="#r1" memo="t
     stateVerdict="no" healthVerdict="no" />
 </Strategies>
 
+<Policy id="PL1" title="Measure before optimizing — no build change ships unmeasured"
+  kind="direction"
+  executedBy="CI gate: queue timings published per release" review="2026-11">
+Born proposed, awaiting the owner's acceptance — the digest of <Ref id="RC1" href="#rc1" memo="nobody owns the schedule" />.
+<Fragment slot="addresses"><Ref id="R1" href="#r1" memo="the queue is the real bottleneck" />, <Ref id="RC1" href="#rc1" memo="nobody owns the schedule" /></Fragment>
+<Fragment slot="relation">ratifies <Ref id="S2" href="#s2" memo="measure before optimizing — not in force" /></Fragment>
+<Fragment slot="operations">inspection — queue dashboard at each release review; it cannot silently fail</Fragment>
+</Policy>
+
 <Bets>
   <Bet id="B1" verdict="Do" cost="1 day">Instrument the queue for one week<Fragment slot="addresses"><Ref id="R1" href="#r1" memo="the queue is the real bottleneck" />, <Ref id="D1" href="#d1" memo="an undocumented cadence" /></Fragment></Bet>
   <Bet id="B2" verdict="Kill" cost="3 weeks">Split the build before anything is measured<Fragment slot="addresses"><Ref id="RC1" href="#rc1" memo="nobody owns the schedule" /></Fragment></Bet>

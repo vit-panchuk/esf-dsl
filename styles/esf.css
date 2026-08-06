@@ -955,6 +955,12 @@ pre code { background: none; padding: 0; font-size: 1em; border: 0; color: inher
                   phrase and reads as part of the sentence. */
                display: block; margin-top: var(--s1); }
 
+/* A policy is born proposed and only a human accepts it. PROPOSED is the
+   one register word that earns orange: an unaccepted standing rule is an
+   open decision — exactly what the signal means here. Acceptance returns
+   the note to ink and lets the rule do the talking. */
+.register-entry[data-policy][data-state="proposed"] .register-note { color: var(--signal-ink); }
+
 /* An inline pointer to a register entry (R1, D1, C2…): mono token linked
    to the entry, with the entry's one-line memo on hover and focus — the
    reader should not lose their place to check what R3 was. */

@@ -276,6 +276,37 @@ export const risk = (
     ].join('\n'),
   );
 
+/** A policy register entry — the decided layer's unit. The acceptance
+ *  state is content and survives, defaulting to `proposed`: a policy is
+ *  born proposed and only a human accepts it. */
+export const policy = (
+  e: {
+    id: string;
+    title: string;
+    kind?: string;
+    state?: string;
+    acceptedBy?: string;
+    executedBy?: string;
+    review?: string;
+  },
+  body: string,
+  facts: { addresses?: string; relation?: string; operations?: string } = {},
+) =>
+  block(
+    [
+      `**${e.id} — ${esc(e.title)}** *(${[e.kind, e.state ?? 'proposed'].filter(Boolean).join(' · ')})*`,
+      body,
+      ...(facts.addresses ? [`Addresses: ${facts.addresses}`] : []),
+      ...(facts.relation ? [`Relation: ${facts.relation}`] : []),
+      ...(facts.operations ? [`Operations: ${facts.operations}`] : []),
+      ...(e.acceptedBy ? [`Accepted by: ${e.acceptedBy}`] : []),
+      ...(e.executedBy ? [`Executed by: ${e.executedBy}`] : []),
+      ...(e.review ? [`Review: ${e.review}`] : []),
+    ]
+      .filter(Boolean)
+      .join('\n'),
+  );
+
 /** A ledger entry, either side. The side is a treatment (the rule colour);
  *  the status qualifier is content and survives. */
 export const ledger = (

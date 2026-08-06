@@ -37,6 +37,7 @@ const AMBIENT_EMITTERS: Record<string, (p: any, s?: H.Slots) => string> = {
   Cause: H.cause,
   Mortem: H.mortem,
   Decision: H.decision,
+  Policy: H.policy,
   Strategies: H.strategies,
   Strategy: H.strategy,
   Bets: H.bets,
@@ -96,7 +97,7 @@ const OFF_STAGE: Record<string, (p: any, s?: H.Slots) => string> = {
 
 const EMITTERS = { ...AMBIENT_EMITTERS, ...OFF_STAGE };
 
-/** The 43 constructs a document may write. Exported so the fixture can be
+/** The 44 constructs a document may write. Exported so the fixture can be
  *  checked against the language rather than against a list someone
  *  maintains by hand. */
 export const AMBIENT = Object.keys(AMBIENT_EMITTERS);
@@ -189,13 +190,25 @@ export function toHtmlDoc(tree: Root, o: HtmlOptions = {}): string {
   const slotsOf = (state: any, node: any): H.Slots => {
     const named: Record<string, any[]> = {};
     const rest: any[] = [];
-    for (const child of node.children ?? []) {
+    /* A slotted fragment authored on its own line without blank lines
+       around it parses INSIDE a paragraph, not beside it — so the scan
+       looks one level into paragraphs and lifts the fragments out,
+       leaving the surrounding prose where it was. */
+    const consider = (child: any, sink: any[]) => {
       const slot =
         child.type === "mdxJsxFlowElement" || child.type === "mdxJsxTextElement"
           ? attr(child, "slot")
           : undefined;
       if (typeof slot === "string") (named[slot] ??= []).push(...(child.children ?? []));
-      else rest.push(child);
+      else sink.push(child);
+    };
+    for (const child of node.children ?? []) {
+      if (child.type === "paragraph") {
+        const keep: any[] = [];
+        for (const k of child.children ?? []) consider(k, keep);
+        if (keep.some((k: any) => !(k.type === "text" && /^\s*$/.test(k.value ?? ""))))
+          rest.push({ ...child, children: keep });
+      } else consider(child, rest);
     }
     const render = (kids: any[]) =>
       toHtml(

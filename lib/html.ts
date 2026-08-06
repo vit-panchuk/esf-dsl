@@ -14,7 +14,8 @@
  * Conventions
  * -----------
  * Every emitter takes `(props, slots?)`. `slots.default` is the already
- * rendered inner HTML; named slots (only `addresses`, on a bet) come in
+ * rendered inner HTML; named slots (`addresses` on a bet; `addresses`,
+ * `relation` and `operations` on a policy) come in
  * beside it. Emitters never escape their slots — the caller has already
  * produced HTML — and always escape their props, which are text.
  */
@@ -108,6 +109,11 @@ export const takeaway = (_p: unknown, s?: Slots): string =>
 const fact = (label: string, v?: string) =>
   v ? `<p class="register-fact"><b>${label}</b> ${esc(v)}</p>` : "";
 
+/** A fact line whose value is an already rendered slot — <Ref>s and
+ *  chips inside stay markup, so it is never escaped. */
+const factHtml = (label: string, html?: string) =>
+  html && html.trim() ? `<p class="register-fact"><b>${label}</b> ${html}</p>` : "";
+
 const head = (id: string | undefined, title: string, note?: string) =>
   `<p class="register-head">${id ? `${esc(id)} — ` : ""}${esc(title)}` +
   (note ? `<span class="register-note">${esc(note)}</span>` : "") +
@@ -171,6 +177,37 @@ export const decision = (
      original plan has to be able to see that it changed. */
   (p.was ? `<p class="decision-was">${esc(p.was)}</p>` : "") +
   `<div class="decision-now">${inner(s)}</div></div>`;
+
+/** A Policy register entry — the decided layer's unit. The state is
+ *  content (`data-state`), and it defaults to `proposed`: a policy is
+ *  born proposed and only a human accepts it, so an emitter that
+ *  defaulted to accepted would be manufacturing a mandate. */
+export const policy = (
+  p: {
+    id: string;
+    title: string;
+    kind?: string;
+    state?: string;
+    acceptedBy?: string;
+    executedBy?: string;
+    review?: string;
+  },
+  s?: Slots,
+): string => {
+  const state = p.state ?? "proposed";
+  return (
+    `<div class="register-entry" data-policy=""${attr("data-state", state)}${idAttr(p.id)}>` +
+    head(p.id, p.title, [p.kind, state].filter(Boolean).join(" · ")) +
+    inner(s) +
+    factHtml("Addresses:", s?.addresses) +
+    factHtml("Relation:", s?.relation) +
+    factHtml("Operations:", s?.operations) +
+    fact("Accepted by:", p.acceptedBy) +
+    fact("Executed by:", p.executedBy) +
+    fact("Review:", p.review) +
+    `</div>`
+  );
+};
 
 const tableWrap = (headRow: string, body: string) =>
   `<div class="table-scroll"><table><thead><tr>${headRow}</tr></thead><tbody>${body}</tbody></table></div>`;

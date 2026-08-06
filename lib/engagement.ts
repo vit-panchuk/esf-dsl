@@ -22,7 +22,8 @@
 import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
-import { analyse, evidenceRows, type DocFacts } from "./doc";
+import { visit } from "unist-util-visit";
+import { analyse, attr, evidenceRows, type DocFacts } from "./doc";
 import { documentOf, type ReportData } from "./document";
 import type { Channel, DocMeta } from "./emit";
 import { loadGraphFile, type Graph } from "./graph";
@@ -232,6 +233,45 @@ export async function check(dir: string, o: LoadOptions = {}): Promise<{
       message:
         "zero [user] claims — this report is biased low and must say so. Artefacts cannot tell you what a stakeholder would have.",
     });
+
+  /* The decided layer (framework v0.7). Both checks are warnings rather
+     than errors because a note or a single-decision report legitimately
+     skips the register — but a full report that diagnoses and never
+     decides is analysis wearing a strategy's layout, and a policy that
+     addresses nothing has no context. The full two-way gate (every TOP
+     diagnosis item covered or explicitly deferred) needs the ranking,
+     which is judgment — this is the mechanical half. */
+  {
+    const DIAGNOSIS = new Set(["Risk", "Debt", "Cause"]);
+    let diagnosis = 0;
+    const uncontextual: string[] = [];
+    let policies = 0;
+    visit(e.facts.tree as any, (n: any) => {
+      if (n.type !== "mdxJsxFlowElement" && n.type !== "mdxJsxTextElement") return;
+      if (DIAGNOSIS.has(n.name)) diagnosis += 1;
+      if (n.name !== "Policy") return;
+      policies += 1;
+      let addressed = false;
+      visit(n, (c: any) => {
+        if (
+          (c.type === "mdxJsxFlowElement" || c.type === "mdxJsxTextElement") &&
+          attr(c, "slot") === "addresses"
+        )
+          addressed = true;
+      });
+      if (!addressed) uncontextual.push(String(attr(n, "id") ?? "a policy"));
+    });
+    if (diagnosis > 0 && policies === 0)
+      problems.push({
+        level: "warning",
+        message: `${diagnosis} diagnosis entries (Risk/Debt/Cause) and no <Policy> — the report diagnoses but never decides. Policies are the standing rules a reader accepts; skip this only for a note or a single decision.`,
+      });
+    for (const id of uncontextual)
+      problems.push({
+        level: "warning",
+        message: `${id} addresses nothing — every policy names the diagnosis items it solves (the \`addresses\` slot). A policy without its diagnosis is not worth much (Larson), and an unaddressed diagnosis item needs a policy or a dated deferment.`,
+      });
+  }
 
   if (!e.data.summary) problems.push({ level: "warning", message: "no `summary` — the card and the abstract will be empty" });
   if (!e.data.framework)

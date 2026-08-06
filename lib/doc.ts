@@ -47,11 +47,12 @@ export const EXHIBITS = new Set([
 
 /** Register-entry families: a `deck` mark on any one entry puts the WHOLE
  *  register on the slide, as a table — one risk per slide would be noise. */
-export const REGISTERS = new Set(["Risk", "Debt", "Credit"]);
+export const REGISTERS = new Set(["Risk", "Debt", "Credit", "Policy"]);
 const REGISTER_HEADS: Record<string, string[]> = {
   Risk: ["", "Risk", "Flag", "Likelihood", "Would you notice?"],
   Debt: ["", "Debt", "Kind"],
   Credit: ["", "Credit", "Status"],
+  Policy: ["", "Policy", "Kind", "State"],
 };
 
 const clean = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -204,7 +205,7 @@ export function analyse(body: string): DocFacts {
   // Register entries collected as the walk passes them; a marked entry's
   // exhibit is filled AFTER the walk, because entries later in the document
   // still belong on its slide.
-  const registerRows: Record<string, string[][]> = { Risk: [], Debt: [], Credit: [] };
+  const registerRows: Record<string, string[][]> = { Risk: [], Debt: [], Credit: [], Policy: [] };
   const pendingRegisters: { exhibit: NonNullable<Block["exhibit"]>; family: string }[] = [];
   const registerRow = (n: any): string[] => {
     const g = (name: string) => str(attr(n, name)) ?? "";
@@ -213,6 +214,10 @@ export function analyse(body: string): DocFacts {
         return [g("id"), g("title"), g("flag"), g("likelihood"), g("notice")];
       case "Debt":
         return [g("id"), g("title"), g("kind")];
+      case "Policy":
+        /* The state defaults on the slide as it does everywhere: born
+           proposed, accepted only by a human. */
+        return [g("id"), g("title"), g("kind"), g("state") || "proposed"];
       default: // Credit
         return [
           g("id"),

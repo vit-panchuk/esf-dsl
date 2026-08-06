@@ -386,6 +386,46 @@ export function toMarkdownDoc(
               )
               .trim();
 
+          case "Policy": {
+            /* Named slots flatten to one line each; the body is what is
+               left once they are filtered out — same split as a Bet. */
+            const slotMd = (name: string) => {
+              const parts = jsxChildren(node, "Fragment")
+                .filter((f: any) => str(attr(f, "slot")) === name)
+                .map(flatLine)
+                .filter(Boolean);
+              return parts.length ? parts.join(" ") : undefined;
+            };
+            /* Slotted fragments parse inside paragraphs when authored
+               without blank lines around them, so the body strip is deep,
+               not a top-level filter. */
+            const stripSlots = (n: any): any => ({
+              ...n,
+              children: (n.children ?? [])
+                .filter((c: any) => str(attr(c, "slot")) === undefined)
+                .map(stripSlots),
+            });
+            return md
+              .policy(
+                {
+                  id: str(attr(node, "id")) ?? "",
+                  title: str(attr(node, "title")) ?? "",
+                  kind: str(attr(node, "kind")),
+                  state: str(attr(node, "state")),
+                  acceptedBy: str(attr(node, "acceptedBy")),
+                  executedBy: str(attr(node, "executedBy")),
+                  review: str(attr(node, "review")),
+                },
+                flatLine(stripSlots(node)),
+                {
+                  addresses: slotMd("addresses"),
+                  relation: slotMd("relation"),
+                  operations: slotMd("operations"),
+                },
+              )
+              .trim();
+          }
+
           case "Risk":
             return md
               .risk(

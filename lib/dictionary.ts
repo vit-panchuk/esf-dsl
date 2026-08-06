@@ -279,6 +279,28 @@ export const DICTIONARY: Entry[] = [
     },
   },
   {
+    name: "Policy",
+    group: "plan",
+    summary: "A Policy register entry (PL…) — the decided layer's unit: a standing decision rule that governs future decisions of its class, where a bet decides an investment once. `kind` is the Larson type (approval · allocation · direction · guidance); `state` is the acceptance state, and it defaults to `proposed` — a policy is born proposed and only the human running the engagement accepts it, because an agent-accepted policy is a fabricated mandate. The statement is the title; the body is the rationale digest built from the memos of the codes it addresses, so the reasoning stays one link away. Anchors by its lowercased id (`#pl1`) so a <Ref> can point at it.",
+    notes:
+      "Named slots carry the linked facts, <Ref>s welcome: `addresses` — the diagnosis items it solves (the rendered projection of the graph's ADDRESSES edges; a policy that addresses nothing has no context); `relation` — the Observed-Strategy-Inventory rows it reinforces, amends or replaces (silent contradiction of a strategy-in-force is how re-litigation wars start); `operations` — the mechanisms that make it real, because a policy row without operations is a wish with a register code.\n" +
+      "\n" +
+      "`acceptedBy`/`executedBy` are dual-addressability: acceptance is the human verb, and the execution address climbs the enforcement ladder as far as the policy's stance requires.",
+    props: [
+      { name: "id", type: "string" },
+      { name: "title", type: "string" },
+      { name: "kind", type: "string", optional: true },
+      { name: "state", type: "\"proposed\" | \"accepted\"", optional: true },
+      { name: "acceptedBy", type: "string", optional: true },
+      { name: "executedBy", type: "string", optional: true },
+      { name: "review", type: "string", optional: true },
+    ],
+    md: {
+      contract: "A bold header line (id — title, kind · state as the note), the body, then one line per stated fact: Addresses, Relation, Operations, Accepted by, Executed by, Review.",
+    },
+    deck: "register",
+  },
+  {
     name: "Strategies",
     group: "plan",
     summary: "The Observed Strategy Inventory — the register of strategies already in force, written or not. There is always one; this table is where it gets named. Renders its <Strategy> rows under the canonical four-column header (localized), so the register reads the same across reports.",
