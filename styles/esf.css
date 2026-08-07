@@ -1292,9 +1292,12 @@ h2.sec-h .sec-n { color: var(--ink-muted); margin-right: 0.5em; }
   margin: var(--s7) 0 var(--s4);
 }
 /* Body sections carry the same numbers the index gives them — the report
-   blueprint's sec-n, derived rather than authored. The evidence base is
-   00 (rendered by the view); prose sections count from 01. */
-.doc > main { counter-reset: sec; }
+   blueprint's sec-n, derived rather than authored. The counter starts at
+   -1 so the first h2 in main paints 00: with a meter that is the Evidence
+   Base (section 00 of the framework's report structure, and row 00 of the
+   Contents), without one it is the document's own first section — either
+   way the body and the index count from the same zero. */
+.doc > main { counter-reset: sec -1; }
 .doc > main .prose h2::before {
   counter-increment: sec;
   content: counter(sec, decimal-leading-zero);

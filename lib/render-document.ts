@@ -45,7 +45,14 @@ export function renderDocument(o: DocumentOptions): string {
   const t = DSL[lang] ?? DSL.en;
   const { facts, data } = o;
 
-  const sections = facts.headings.filter((h) => h.depth === (o.indexDepth ?? 2));
+  /* The Evidence Base section is injected by this view (the meter), so the
+     document's own headings never contain it — prepend it here or the
+     Contents starts one section late and every number drifts off the ones
+     the body counter paints. */
+  const sections = [
+    ...(facts.total > 0 ? [{ depth: 2, text: t.evidenceHeading, slug: "evidence-base" }] : []),
+    ...facts.headings.filter((h) => h.depth === (o.indexDepth ?? 2)),
+  ];
 
   /* The rail is derived from what the document already says. A consumer
      adding rows appends; it cannot silently replace the revision or the

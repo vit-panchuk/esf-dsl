@@ -257,9 +257,14 @@ export function toHtmlDoc(tree: Root, o: HtmlOptions = {}): string {
       heading(state: any, node: any) {
         const el: any = { type: "element", tagName: `h${node.depth}`, properties: {}, children: state.all(node) };
         if (depths.includes(node.depth)) {
-          const text = toHtml({ type: "root", children: state.all(node) } as any, {
-            allowDangerousHtml: true,
-          }).replace(/<[^>]*>/g, "");
+          /* Collect raw text from the hast nodes — never via toHtml, whose
+             escaping leaks into the slug: "Policies & Operations" serialized
+             to "Policies &#x26; Operations", and once the tags were stripped
+             the entity's body survived slugify as "policies-x26-operations",
+             a heading id the section index could not find. */
+          const textOf = (n: any): string =>
+            n.type === "text" ? n.value : (n.children ?? []).map(textOf).join("");
+          const text = state.all(node).map(textOf).join("");
           const token = text.match(/^((?:[A-Z]{1,3}\d+|Role\s+[A-Z]))\b/);
           el.properties.id = token
             ? token[1].toLowerCase().replace(/\s+/g, "-")
