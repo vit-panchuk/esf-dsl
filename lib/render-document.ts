@@ -61,9 +61,13 @@ export function renderDocument(o: DocumentOptions): string {
   if (data.framework) rows.push({ k: "framework", v: data.framework });
   rows.push(...(o.rail ?? []));
 
+  /* Meta blocks first, Contents last — the order esf.css depends on: the
+     toc is position:sticky, and a pinned element glides down over LATER
+     siblings, so a toc rendered first paints over every meta block as the
+     page scrolls. */
   const rail =
-    H.toc({ label: t.frame.contents, sections, start: 0 }) +
-    rows.map((r) => H.railBlock({ k: r.k, live: r.live }, { default: H.esc(r.v) })).join("");
+    rows.map((r) => H.railBlock({ k: r.k, live: r.live }, { default: H.esc(r.v) })).join("") +
+    H.toc({ label: t.frame.contents, sections, start: 0 });
 
   const head = H.docHead(
     {
