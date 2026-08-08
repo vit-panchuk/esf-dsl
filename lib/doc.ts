@@ -46,13 +46,15 @@ export const EXHIBITS = new Set([
 ]);
 
 /** Register-entry families: a `deck` mark on any one entry puts the WHOLE
- *  register on the slide, as a table — one risk per slide would be noise. */
-export const REGISTERS = new Set(["Risk", "Debt", "Credit", "Policy"]);
+ *  register on the slide, as a table — one risk per slide would be noise.
+ *  Policy is deliberately NOT here: policies are the decided layer, and a
+ *  deck-marked one gets its own detailed slide (see the Policy branch in
+ *  the walk) rather than a summary row. */
+export const REGISTERS = new Set(["Risk", "Debt", "Credit"]);
 const REGISTER_HEADS: Record<string, string[]> = {
   Risk: ["", "Risk", "Flag", "Likelihood", "Would you notice?"],
   Debt: ["", "Debt", "Kind"],
   Credit: ["", "Credit", "Status"],
-  Policy: ["", "Policy", "Kind", "State"],
 };
 
 const clean = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -65,6 +67,23 @@ const textWithRefs = (n: any): string => {
     return str(attr(n, "id")) ?? "";
   if (typeof n.value === "string" && n.type !== "mdxFlowExpression") return n.value;
   if (Array.isArray(n.children)) return n.children.map(textWithRefs).join("");
+  return "";
+};
+
+/** textWithRefs at deck grade. On the page a code is a link with a hover
+ *  memo; on a slide it is ink, and "RC1" alone means nothing to a room —
+ *  so each <Ref> flattens to "id (memo)", the framework's rule that a
+ *  mention travels with its entry's one-line memo, expanded inline the
+ *  way the markdown channel does it. */
+const textWithMemos = (n: any): string => {
+  if (!n) return "";
+  if ((n.type === "mdxJsxFlowElement" || n.type === "mdxJsxTextElement") && n.name === "Ref") {
+    const id = str(attr(n, "id")) ?? "";
+    const memo = str(attr(n, "memo"));
+    return memo ? `${id} (${memo})` : id;
+  }
+  if (typeof n.value === "string" && n.type !== "mdxFlowExpression") return n.value;
+  if (Array.isArray(n.children)) return n.children.map(textWithMemos).join("");
   return "";
 };
 
@@ -205,7 +224,7 @@ export function analyse(body: string): DocFacts {
   // Register entries collected as the walk passes them; a marked entry's
   // exhibit is filled AFTER the walk, because entries later in the document
   // still belong on its slide.
-  const registerRows: Record<string, string[][]> = { Risk: [], Debt: [], Credit: [], Policy: [] };
+  const registerRows: Record<string, string[][]> = { Risk: [], Debt: [], Credit: [] };
   const pendingRegisters: { exhibit: NonNullable<Block["exhibit"]>; family: string }[] = [];
   const registerRow = (n: any): string[] => {
     const g = (name: string) => str(attr(n, name)) ?? "";
@@ -214,10 +233,6 @@ export function analyse(body: string): DocFacts {
         return [g("id"), g("title"), g("flag"), g("likelihood"), g("notice")];
       case "Debt":
         return [g("id"), g("title"), g("kind")];
-      case "Policy":
-        /* The state defaults on the slide as it does everywhere: born
-           proposed, accepted only by a human. */
-        return [g("id"), g("title"), g("kind"), g("state") || "proposed"];
       default: // Credit
         return [
           g("id"),
@@ -273,6 +288,66 @@ export function analyse(body: string): DocFacts {
         thread: thread as Block["thread"],
         anchor: lastAnchor,
       });
+    }
+
+    // A deck-marked policy is the exception to the register-table rule:
+    // policies are the decided layer — the part of the strategy a reader
+    // must accept or reject — so each one gets its own slide, in full.
+    // The statement is the headline (a bare `deck` reuses it, and the
+    // 14-word budget is exactly the discipline a policy statement should
+    // pass anyway); the stated facts travel as typed fields; the rationale
+    // digest becomes the speaker note.
+    if (node.name === "Policy") {
+      const deck = attr(node, "deck");
+      if (deck === undefined) return;
+      const g = (name: string) => str(attr(node, name));
+      /* Slotted fragments parse inside paragraphs when authored without
+         blank lines around them — unwrap one paragraph level, the same
+         move the markdown channel makes. */
+      const slotText = (name: string) => {
+        const parts = (node.children ?? [])
+          .flatMap((c: any) => (c.type === "paragraph" ? c.children : [c]))
+          .filter(
+            (c: any) =>
+              (c.type === "mdxJsxFlowElement" || c.type === "mdxJsxTextElement") &&
+              str(attr(c, "slot")) === name,
+          )
+          .map((c: any) => clean(textWithMemos(c)))
+          .filter(Boolean);
+        return parts.length ? parts.join(" ") : undefined;
+      };
+      /* Slotted fragments parse inside paragraphs when authored without
+         blank lines around them, so the digest strip is deep, not a
+         top-level filter — same rule as the markdown channel. */
+      const stripSlots = (n: any): any => ({
+        ...n,
+        children: (n.children ?? [])
+          .filter((c: any) => str(attr(c, "slot")) === undefined)
+          .map(stripSlots),
+      });
+      const title = g("title") ?? "";
+      blocks.push({
+        id: g("id") ?? `pl${blocks.length + 1}`,
+        component: "Policy",
+        text: title,
+        order: order++,
+        deck: deck as Block["deck"],
+        policy: {
+          id: g("id") ?? "",
+          title,
+          kind: g("kind"),
+          state: g("state") ?? "proposed",
+          acceptedBy: g("acceptedBy"),
+          executedBy: g("executedBy"),
+          review: g("review"),
+          addresses: slotText("addresses"),
+          relation: slotText("relation"),
+          operations: slotText("operations"),
+          digest: clean(textWithMemos(stripSlots(node))) || undefined,
+        },
+        anchor: lastAnchor,
+      });
+      return;
     }
 
     // A deck-marked chart, table or register becomes an exhibit slide: the

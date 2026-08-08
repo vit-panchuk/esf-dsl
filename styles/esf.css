@@ -194,6 +194,33 @@ a:hover { text-decoration-color: var(--signal); }
 .toc a:hover span:first-child { color: var(--signal); }
 .toc a[aria-current="true"] { color: var(--ink); }
 .toc a[aria-current="true"] span:first-child { color: var(--ink); }
+/* The marked entry — the index's one permitted act of emphasis, for the
+   section the whole document answers to. The rainbow runs through the
+   label only; the number keeps the register of its neighbours. The drift
+   animates: the gradient ends on the colour it starts on and the position
+   travels exactly one tile per cycle, so the loop has no seam. Reduced
+   motion holds it still. No underline on hover or current — the generic
+   rules already turn the index number ink, and that is enough weight next
+   to a label that is already a rainbow. */
+.toc a[data-mark] span:last-child {
+  /* Mid-luminance hues only: flag-dark greens and navies vanish on a dark
+     theme, and pure yellow vanishes on a light one. Every stop here reads
+     on both. */
+  background: linear-gradient(90deg,
+    #ff4d4d, #ff8c00, #e0a800, #2dbd4e, #4c8dff, #b05ce6, #ff4d4d);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; font-weight: 700;
+  animation: toc-rainbow 8s linear infinite;
+}
+@keyframes toc-rainbow { to { background-position: 200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .toc a[data-mark] span:last-child { animation: none; }
+}
+@media print {
+  /* Gradient text prints as nothing on some engines; ink, and bold. */
+  .toc a[data-mark] span:last-child { background: none; color: var(--ink); }
+}
 .toc-grp { margin-top: var(--s4); font-size: 0.64rem; letter-spacing: 0.12em;
            color: var(--ink-muted); }
 /* Collapsed rail: the index stays a single list — a table of contents read
@@ -1188,6 +1215,22 @@ pre code { background: none; padding: 0; font-size: 1em; border: 0; color: inher
 .slide--exhibit .slide-inner { max-width: 62rem; width: 100%; }
 .slide-h--exhibit { font-size: clamp(1.4rem, 2.8vw, 2.1rem); }
 .slide--exhibit .table-scroll { font-size: var(--step--1); }
+/* A policy slide carries the whole decided rule. The statement steps down
+   just enough to leave the stage to the facts under it — the labels sit in
+   the same mono register the report's own policy rows use, so the slide
+   and its register entry read as the same object. */
+.slide--policy .slide-inner { max-width: 54rem; width: 100%; }
+.slide-h--policy { font-size: clamp(1.6rem, 3.4vw, 2.6rem); }
+.slide-facts { margin: 0; display: grid; gap: var(--s3); }
+.slide-fact { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr);
+              gap: var(--s4); align-items: start; }
+.slide-fact dt { font-family: var(--mono); font-size: 0.72rem;
+                 letter-spacing: 0.06em; text-transform: uppercase;
+                 color: var(--ink-muted); padding-top: 0.25em; }
+.slide-fact dd { margin: 0; font-size: var(--step--1); line-height: 1.45; }
+@media (max-width: 40rem) {
+  .slide-fact { grid-template-columns: 1fr; gap: var(--s1); }
+}
 
 @media print {
   /* One slide per page. A4 landscape (210mm) less the @page vertical
@@ -1296,8 +1339,17 @@ h2.sec-h .sec-n { color: var(--ink-muted); margin-right: 0.5em; }
    -1 so the first h2 in main paints 00: with a meter that is the Evidence
    Base (section 00 of the framework's report structure, and row 00 of the
    Contents), without one it is the document's own first section — either
-   way the body and the index count from the same zero. */
+   way the body and the index count from the same zero. The zero holds per
+   consumer only because the Evidence Base section is the EvidenceBase
+   construct — a .prose h2 like every section after it. A host that
+   hand-builds that heading as chrome slips its whole body off the index's
+   zero; the off-by-one has bitten once per consumer. Adopt the construct;
+   never author a number. */
 .doc > main { counter-reset: sec -1; }
+/* The Evidence Base section owns its break with the body below it —
+   margins in this system run one direction only: down. Without this the
+   meter's note sat flush against the opening prose. */
+.evidence-base { margin-bottom: var(--s7); }
 .doc > main .prose h2::before {
   counter-increment: sec;
   content: counter(sec, decimal-leading-zero);

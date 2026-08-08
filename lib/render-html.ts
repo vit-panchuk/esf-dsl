@@ -88,6 +88,7 @@ const OFF_STAGE: Record<string, (p: any, s?: H.Slots) => string> = {
   Deck: H.deck,
   Claim: H.claim,
   EvidenceBar: H.evidenceBar,
+  EvidenceBase: H.evidenceBase,
   Doc: H.doc,
   DocHead: H.docHead,
   Rail: H.rail,
@@ -244,11 +245,29 @@ export function toHtmlDoc(tree: Root, o: HtmlOptions = {}): string {
     return { type: "raw", value: emit({ lang, ...readProps(node) }, slotsOf(state, node)) } as any;
   };
 
+  /**
+   * The one expression form a document legitimately writes: a template
+   * literal with nothing interpolated, wrapping text that markdown would
+   * otherwise eat — a <Listing>'s `#` lines would parse as headings
+   * without it. Its content renders as text; any other expression renders
+   * as nothing, because the default handler's alternative — leaking the
+   * expression's own source, backticks and all, into the page — is how a
+   * listing stops highlighting the day the host stops compiling MDX.
+   */
+  const expression = (_state: any, node: any) => {
+    const m = String(node.value ?? "")
+      .trim()
+      .match(/^`([\s\S]*)`$/);
+    return m && !m[1].includes("${") ? ({ type: "text", value: m[1] } as any) : undefined;
+  };
+
   const hast = toHast(tree, {
     allowDangerousHtml: true,
     handlers: {
       mdxJsxFlowElement: construct,
       mdxJsxTextElement: construct,
+      mdxFlowExpression: expression,
+      mdxTextExpression: expression,
       /* Headings carry their own anchor. The slug matches `doc.ts`, which
          is what the section index links to — a contents list that
          disagreed with the ids would be worse than none. Entry headings

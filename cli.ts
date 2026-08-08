@@ -149,7 +149,9 @@ function describe(e: Entry): string {
       wrap(
         e.deck === "exhibit"
           ? "A `deck` mark puts the data itself on a slide, headlined by the mark's rewrite."
-          : "A `deck` mark on any entry puts the whole register on one slide, as a table.",
+          : e.deck === "card"
+            ? "A `deck` mark puts THAT entry on its own slide, in full — the statement as the headline (a bare mark reuses it, so it must pass the 14-word budget), every stated fact under it, and the rationale digest as the speaker note. Refs in the facts expand to \"id (memo)\": a bare code means nothing to a room."
+            : "A `deck` mark on any entry puts the whole register on one slide, as a table.",
       ),
     );
   return out.join("\n");

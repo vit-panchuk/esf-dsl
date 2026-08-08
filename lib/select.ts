@@ -25,6 +25,26 @@ export interface Exhibit {
   split?: number;
 }
 
+/**
+ * A deck-marked policy, carried whole. Policies are the decided layer —
+ * the part of the strategy the room is being asked to accept — so the
+ * deck refuses to reduce one to a table row: every stated fact travels,
+ * and the rationale digest rides along as the speaker note.
+ */
+export interface PolicyCard {
+  id: string;
+  title: string;
+  kind?: string;
+  state: string;
+  acceptedBy?: string;
+  executedBy?: string;
+  review?: string;
+  addresses?: string;
+  relation?: string;
+  operations?: string;
+  digest?: string;
+}
+
 export interface Block {
   id: string;
   component: string;
@@ -35,6 +55,8 @@ export interface Block {
   thread?: Mark;
   /** Set on a deck-marked chart or table — a slide can show it, a post cannot. */
   exhibit?: Exhibit;
+  /** Set on a deck-marked policy — the whole row, for its own slide. */
+  policy?: PolicyCard;
   /** The section the block sits in — the slide's way back into the report. */
   anchor?: { slug: string; title: string };
 }
@@ -58,10 +80,11 @@ const pick = (channel: 'deck' | 'thread', blocks: Block[]) =>
  * against.
  */
 export interface Slide {
-  layout: 'title' | 'statement' | 'finding' | 'exhibit' | 'evidence';
+  layout: 'title' | 'statement' | 'finding' | 'exhibit' | 'policy' | 'evidence';
   text?: string;
   tag?: string;
   exhibit?: Exhibit;
+  policy?: PolicyCard;
   note?: string;
   /** Where in the report this slide comes from. */
   anchor?: { slug: string; title: string };
@@ -77,6 +100,17 @@ export const deck = (meta: DocMeta, blocks: Block[]): Slide[] | null => {
       const block = byId.get(s.id);
       const exhibit = block?.exhibit;
       const anchor = block?.anchor;
+      /* A policy slide: the statement (or its rewrite) as the headline,
+         the stated facts on the slide, the rationale digest as the note —
+         what the room reads is the rule; what you say is why. */
+      if (block?.policy)
+        return [{
+          layout: 'policy',
+          text: s.text,
+          policy: block.policy,
+          anchor,
+          note: block.policy.digest,
+        }];
       if (!exhibit)
         return [{
           layout: s.tag ? 'finding' : 'statement',

@@ -90,6 +90,31 @@ export const evidence = (p: { rows?: EvidenceRowIn[]; note?: string } = {}): str
   );
 };
 
+/** The Evidence Base section, whole: the localized heading, the meter, and
+ *  the note under it. Furniture the language owns — the standalone edition
+ *  renders THIS and a hosting site adopts the same construct, so the
+ *  heading is a `.prose` h2 the body counter numbers like every section
+ *  after it. 00 and 01 come from one zero, per consumer, by construction;
+ *  the off-by-one that motivated this construct bit once per consumer. */
+export const evidenceBase = (p: {
+  rows?: EvidenceRowIn[];
+  note?: string;
+  lang?: string;
+}): string => {
+  const t = DSL[langOf(p)];
+  /* Same rule as the deck's closing slide: labels localize in the
+     construct, and rows a host already mapped pass through untouched. */
+  const rows = (p.rows ?? []).map((r: any) => ({
+    ...r,
+    label: (t.tags as any)[r.label] ?? r.label,
+  }));
+  return (
+    `<section class="prose evidence-base"><h2 id="evidence-base">${esc(t.evidenceHeading)}</h2>` +
+    evidence({ rows, note: p.note }) +
+    `</section>`
+  );
+};
+
 export const verdict = (p: { value: "yes" | "no" | "part"; symbol?: boolean }, s?: Slots): string =>
   `<span class="verdict${p.symbol === false ? " verdict--bare" : ""}"${attr("data-verdict", p.value)}>${inner(s)}</span>`;
 
@@ -749,8 +774,15 @@ export const railBlock = (p: { k: string; live?: boolean }, s?: Slots): string =
   `<span class="rail-v${p.live ? " row-live" : ""}">${inner(s)}</span></div>`;
 
 /** The section index. One entry is not an index, so a single-section
- *  document gets none. */
-export const toc = (p: { label: string; sections: { text: string; slug: string }[]; start?: number }): string => {
+ *  document gets none. A section may carry `mark: true` — the index's one
+ *  permitted act of emphasis, for the entry the whole document answers to
+ *  (the decided layer, in a strategy report). One mark; a contents page
+ *  where everything shouts is a contents page that says nothing. */
+export const toc = (p: {
+  label: string;
+  sections: { text: string; slug: string; mark?: boolean }[];
+  start?: number;
+}): string => {
   if (p.sections.length <= 1) return "";
   const start = p.start ?? 1;
   return (
@@ -758,7 +790,7 @@ export const toc = (p: { label: string; sections: { text: string; slug: string }
     p.sections
       .map(
         (h, i) =>
-          `<a href="#${esc(h.slug)}"><span>${String(i + start).padStart(2, "0")}</span><span>${esc(h.text)}</span></a>`,
+          `<a href="#${esc(h.slug)}"${h.mark ? ' data-mark=""' : ""}><span>${String(i + start).padStart(2, "0")}</span><span>${esc(h.text)}</span></a>`,
       )
       .join("") +
     `</nav>`
@@ -813,10 +845,21 @@ let hljsCache: any;
 function requireHljs() {
   if (hljsCache !== undefined) return hljsCache;
   try {
-    /* createRequire rather than a static import so the module graph of a
-       consumer that never renders a listing stays small. */
-    const { createRequire } = require("node:module");
-    hljsCache = createRequire(import.meta.url)("highlight.js").default ?? null;
+    /* Resolved lazily so a consumer that never renders a listing keeps a
+       small module graph — but never via a bare `require`, which does not
+       exist in an ES module. Under Node that reference threw, the catch
+       swallowed it, and every listing quietly stopped highlighting; Bun
+       and vitest shim `require`, which is why no test noticed. The chain:
+       a real `require` where one exists (CJS, Bun), else the ESM-safe
+       synchronous door (`process.getBuiltinModule`, Node ≥20.16), else
+       null — a browser bundle renders listings plain, as before. */
+    const req =
+      typeof require !== "undefined"
+        ? require
+        : (globalThis as any).process
+            ?.getBuiltinModule?.("node:module")
+            ?.createRequire?.(import.meta.url);
+    hljsCache = req ? (req("highlight.js").default ?? null) : null;
   } catch {
     hljsCache = null;
   }
@@ -882,11 +925,41 @@ export const deck = (p: {
         (s.tag ? `<p class="eyebrow">${chip({ kind: s.tag, lang: p.lang })}</p>` : "") +
         `<h2 class="slide-h slide-h--exhibit">${esc(s.text)}</h2>` +
         exhibitOf(s.exhibit);
-    else if (s.layout === "evidence")
+    else if (s.layout === "policy" && s.policy) {
+      /* The decided layer's slide: the statement as the headline, every
+         stated fact under it. The labels match the report's policy row
+         exactly — a slide and its register entry must read as the same
+         object, or the room debates the rendering instead of the rule. */
+      const pl = s.policy;
+      const fact = (k: string, v?: string) =>
+        v
+          ? `<div class="slide-fact"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`
+          : "";
+      body =
+        `<p class="eyebrow">${esc([pl.id, pl.kind, pl.state].filter(Boolean).join(" · "))}</p>` +
+        `<h2 class="slide-h slide-h--policy">${esc(s.text)}</h2>` +
+        `<dl class="slide-facts">` +
+        fact("Addresses", pl.addresses) +
+        fact("Relation", pl.relation) +
+        fact("Operations", pl.operations) +
+        fact("Accepted by", pl.acceptedBy) +
+        fact("Executed by", pl.executedBy) +
+        fact("Review", pl.review) +
+        `</dl>` +
+        (s.note ? `<p class="slide-note no-print">${esc(s.note)}</p>` : "");
+    } else if (s.layout === "evidence")
       body =
         `<p class="eyebrow">${esc(t.evidenceEyebrow)}</p>` +
         `<h2 class="slide-h">${p.total ?? 0} ${esc(tags.taggedClaims(p.total ?? 0))}</h2>` +
-        evidence({ rows: p.rows ?? [] }) +
+        /* Labels localize here, not in the caller: one host mapped them and
+           another did not, which is how a slide said "user" while every
+           page said "stakeholder". Already-mapped labels pass through. */
+        evidence({
+          rows: (p.rows ?? []).map((r: any) => ({
+            ...r,
+            label: (tags.tags as any)[r.label] ?? r.label,
+          })),
+        }) +
         `<p class="slide-body">${esc(t.evidenceNote)}</p>`;
 
     /* Every slide names the place it was selected from: a slide quoted out

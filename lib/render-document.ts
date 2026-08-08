@@ -86,12 +86,15 @@ export function renderDocument(o: DocumentOptions): string {
   );
 
   /* A report opens with its evidence base, before the conclusions — the
-     meter is the framework's selling point and counted, never authored. */
+     meter is the framework's selling point and counted, never authored.
+     The whole section is the EvidenceBase construct, shared verbatim with
+     hosting sites so no consumer can renumber it. */
   const meter =
     facts.total > 0
-      ? `<section class="prose"><h2 id="evidence-base">${H.esc(t.evidenceHeading)}</h2>` +
-        H.evidence({ rows: evidenceRows(facts).map((r) => ({ ...r, label: t.tags[r.label] })) }) +
-        `</section>`
+      ? H.evidenceBase({
+          rows: evidenceRows(facts).map((r) => ({ ...r, label: t.tags[r.label] })),
+          lang,
+        })
       : "";
 
   const body = `<div class="prose">${toHtmlDoc(facts.tree, { lang })}</div>`;

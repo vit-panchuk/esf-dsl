@@ -149,3 +149,115 @@ describe("headings", () => {
     expect(f.headings[0].slug).toBe("що-саме-протухло");
   });
 });
+
+/**
+ * A <Listing>'s template-literal child is the one expression a document
+ * writes — it protects `#` lines from parsing as headings. It must render
+ * as its text and highlight; the default unknown-node handler would leak
+ * the expression source, backticks and all, which is exactly the
+ * regression this pins down.
+ */
+describe("listing expressions", () => {
+  it("renders a template-literal child as text, highlighted — never as its own source", async () => {
+    const { toHtmlDoc } = await import("../render-html");
+    const f = analyse(
+      '<Listing lang="sh" file="action.yml">\n{`# a comment\nmkdir -p app/assets`}\n</Listing>',
+    );
+    const html = toHtmlDoc(f.tree as any);
+    expect(html).not.toContain("`# a comment");
+    expect(html).toContain("hljs-comment");
+    /* Tokenized, so the command sits inside a span — the assertion checks
+       both halves rather than the contiguous string. */
+    expect(html).toContain("hljs-built_in");
+    expect(html).toContain("-p app/assets");
+  });
+
+  it("renders an interpolating expression as nothing rather than as source", async () => {
+    const { toHtmlDoc } = await import("../render-html");
+    const f = analyse("A paragraph.\n\n{`before ${1 + 1} after`}\n");
+    const html = toHtmlDoc(f.tree as any);
+    expect(html).not.toContain("${");
+    expect(html).not.toContain("before");
+  });
+});
+
+/**
+ * Policies are the decided layer, and the deck treats them that way: a
+ * deck-marked <Policy> becomes its own detailed slide, never a summary
+ * table row. These tests pin the card's whole journey — extraction,
+ * selection, and the statement doubling as the budget-checked headline.
+ */
+describe("policy cards", () => {
+  const POLICY = `
+## Policies & Operations
+
+<Policy
+  id="PL1"
+  title="Every replacement names the release that removes what it replaces"
+  kind="direction"
+  state="proposed"
+  acceptedBy="Core Team (proposed)"
+  executedBy="release checklist"
+  review="2027-02-08"
+  deck
+>
+The rationale digest, with a code <Ref id="RC1" href="#rc1" memo="the root cause" /> inline.
+<Fragment slot="addresses"><Ref id="RC1" href="#rc1" memo="the root cause" />, <Ref id="D1" href="#d1" memo="the debt" /></Fragment>
+<Fragment slot="relation">amends <Ref id="S3" href="#s3" memo="the strategy row" /></Fragment>
+<Fragment slot="operations">an exit-criteria line in the release notes</Fragment>
+</Policy>
+`;
+
+  it("carries a deck-marked policy whole — props, slots and digest", () => {
+    const f = analyse(POLICY);
+    expect(f.blocks).toHaveLength(1);
+    const b = f.blocks[0];
+    expect(b.component).toBe("Policy");
+    expect(b.text).toBe("Every replacement names the release that removes what it replaces");
+    expect(b.policy).toMatchObject({
+      id: "PL1",
+      kind: "direction",
+      state: "proposed",
+      acceptedBy: "Core Team (proposed)",
+      review: "2027-02-08",
+    });
+    /* On a slide a bare code means nothing to the room, so every Ref
+       travels with its memo, expanded inline. */
+    expect(b.policy?.addresses).toBe("RC1 (the root cause), D1 (the debt)");
+    expect(b.policy?.relation).toBe("amends S3 (the strategy row)");
+    expect(b.policy?.operations).toBe("an exit-criteria line in the release notes");
+    expect(b.policy?.digest).toContain("RC1 (the root cause) inline");
+    expect(b.policy?.digest).not.toContain("amends");
+  });
+
+  it("defaults the state to proposed — an emitter must not manufacture a mandate", () => {
+    const f = analyse(`<Policy id="PL9" title="Short rule" deck>Body.</Policy>`);
+    expect(f.blocks[0].policy?.state).toBe("proposed");
+  });
+
+  it("leaves an unmarked policy out of the selection", () => {
+    const f = analyse(`<Policy id="PL2" title="Unmarked rule">Body.</Policy>`);
+    expect(f.blocks).toHaveLength(0);
+  });
+
+  it("becomes its own slide, with the digest as the speaker note", async () => {
+    const { deck } = await import("../select");
+    const f = analyse(POLICY);
+    const slides = deck({ title: "T", emits: ["deck"] } as any, f.blocks);
+    expect(slides).not.toBeNull();
+    const policySlides = slides!.filter((s) => s.layout === "policy");
+    expect(policySlides).toHaveLength(1);
+    expect(policySlides[0].text).toBe(
+      "Every replacement names the release that removes what it replaces",
+    );
+    expect(policySlides[0].policy?.id).toBe("PL1");
+    expect(policySlides[0].note).toContain("rationale digest");
+  });
+
+  it("still budget-checks the headline — a long statement needs a rewrite", async () => {
+    const { deck } = await import("../select");
+    const long = Array.from({ length: 16 }, (_, i) => `word${i}`).join(" ");
+    const f = analyse(`<Policy id="PL8" title="${long}" deck>Body.</Policy>`);
+    expect(() => deck({ title: "T", emits: ["deck"] } as any, f.blocks)).toThrow(/16 words/);
+  });
+});

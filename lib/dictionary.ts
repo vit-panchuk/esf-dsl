@@ -82,9 +82,12 @@ export interface Entry {
   md: MdContract;
   /** How a `deck` mark on this construct is treated. An exhibit puts the
    *  data itself on a slide; a register entry puts the whole register
-   *  there, because one risk per slide is noise. Everything else marked
-   *  `deck` travels as a block with its rewrite. */
-  deck?: "exhibit" | "register";
+   *  there, because one risk per slide is noise; a card puts THAT entry on
+   *  its own slide, in full — the treatment the decided layer gets, because
+   *  a policy reduced to a table row buries the thing the room is being
+   *  asked to accept. Everything else marked `deck` travels as a block
+   *  with its rewrite. */
+  deck?: "exhibit" | "register" | "card";
 }
 
 export const DICTIONARY: Entry[] = [
@@ -102,6 +105,18 @@ export const DICTIONARY: Entry[] = [
     md: {
       contract: "`[observed]` — a code span immediately after the claim, no space. Provenance is content, never treatment: it survives every channel. In plain text with no code spans available, it stays as (observed).",
     },
+  },
+  {
+    name: "EvidenceBase",
+    group: "provenance",
+    ambient: false,
+    summary: "The Evidence Base section, whole: the localized heading, the meter, and the note under it. Furniture the language owns — the standalone edition renders this and a hosting site adopts the same construct, so the heading is a .prose h2 the body counter numbers like every section after it: 00 and 01 come from one zero, per consumer, by construction.",
+    props: [
+      { name: "rows", type: "EvidenceRowIn[]", optional: true },
+      { name: "note", type: "string", optional: true },
+      { name: "lang", type: "string", optional: true },
+    ],
+    md: { drops: "the section frame belongs to the view; the meter itself travels via Evidence" },
   },
   {
     name: "Evidence",
@@ -298,7 +313,7 @@ export const DICTIONARY: Entry[] = [
     md: {
       contract: "A bold header line (id — title, kind · state as the note), the body, then one line per stated fact: Addresses, Relation, Operations, Accepted by, Executed by, Review.",
     },
-    deck: "register",
+    deck: "card",
   },
   {
     name: "Strategies",
